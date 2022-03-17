@@ -1,6 +1,7 @@
 const express = require('express');
 const nunjucks = require('nunjucks');
 const expressFileUpload = require('express-fileupload');
+const fs = require('fs');
 const app = express();
 
 const bodyParser = require('body-parser');
@@ -31,19 +32,28 @@ app.post('/imagen', async (req, res) => {
   try {
     const posicion = req.body.posicion;
     const imagen = req.files.target_file;
-    if (!imagen || !posicion) throw 'Error';
+    if (!imagen || !posicion) throw 'Error, faltan datos';
 
     const { name } = imagen;
     const formato = name.split('.').slice(-1)[0];
-    if (formato !== 'jpg')
-      return res.send('Formato de imagen invalido (solo JPG)');
+    if (formato !== 'jpg') throw 'Formato de imagen invalido (solo JPG)';
 
     imagen.mv(`static/imgs/imagen-${posicion}.jpg`, error => {
       res.redirect('/collage');
     });
   } catch (error) {
-    res.redirect('/');
+    console.log(error.message);
+    res.redirect('/collage');
   }
+});
+
+app.get('/deleteImg/:imagen', async (req, res) => {
+  const { imagen } = req.params;
+  console.log(imagen);
+  fs.unlink(`static/imgs/${imagen}`, error => {
+    console.log('imagen eliminada');
+    res.redirect('/collage');
+  });
 });
 
 app.listen(3000, () => console.log('Servidor en puerto 3000'));
